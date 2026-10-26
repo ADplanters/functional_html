@@ -1,40 +1,3 @@
-<?php
-// 오류 방지 및 헤더 설정
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
-header('Content-Type: text/html; charset=UTF-8');
-
-// POST 데이터 전송 시 API 호출
-if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
-    $name = isset($_POST["name"]) ? strip_tags($_POST["name"]) : "";
-    $tel  = isset($_POST["tel"]) ? strip_tags($_POST["tel"]) : "";
-
-    $SEND_DATA_ary = array();
-    $SEND_DATA_ary["ITEM"]    = "20";
-    $SEND_DATA_ary["DBname"]  = $name;
-    $SEND_DATA_ary["DBphone"] = $tel;
-    $SEND_DATA_ary["DBfild1"] = isset($_POST["option1"]) ? strip_tags($_POST["option1"]) : "";
-    $SEND_DATA_ary["DBfild2"] = isset($_POST["option2"]) ? strip_tags($_POST["option2"]) : "";
-    $SEND_DATA_ary["DBfild3"] = isset($_POST["time"]) ? strip_tags($_POST["time"]) : "";
-    $SEND_DATA_ary["DBip"]    = $_SERVER["REMOTE_ADDR"];
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://anonymus.kr/api/");
-    curl_setopt($ch, CURLOPT_HEADER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $SEND_DATA_ary);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    curl_exec($ch);
-    curl_close($ch);
-?>
-    <script>
-    location.href = "success.html";
-    </script>
-<?php
-    exit;
-}
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -47,7 +10,6 @@ if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
 <link rel="stylesheet" type="text/css" href="css/slick.css"/>
 <link rel="stylesheet" type="text/css" href="css/slick-theme.css" >
 
-<!-- jQuery 라이브러리를 최상단으로 이동 -->
 <script src="js/jquery-1.11.0.min.js"></script>
 <script src="js/jquery-ui.min.js"></script>
 <script src="js/jquery.bpopup.min.js"></script>
@@ -190,7 +152,7 @@ if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
     </div>
     <!-- //layer1 -->
 
-    <!-- layer2 (Form 태그 및 name 속성 추가 완료) -->
+    <!-- layer2 -->
     <div class="layer_box2" id="layer_2" style="display:none;">
         <div class="content_box">       
             <div class="top_container">
@@ -201,8 +163,7 @@ if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
             <p class="content_title">실시간 <span>급등 종목 분석</span> 받기</p>
             <p class="sub_title">* 해당 정보를 입력하시면 분석된 종목을 제공해드립니다.</p>
         
-            <form id="apply_form" method="post" action="">
-                <input type="hidden" name="Update_type" value="Update_now">
+            <form id="apply_form" onsubmit="return false;">
                 <div class="input_box">
                     <ul>
                         <li class="input_name">
@@ -216,9 +177,9 @@ if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
                     </ul>
                 </div>
                 <div class="agree_box">
-                    <p><label class="checkbox-wrap"><input type="checkbox" name="agree1" id="agree1" checked><i class="check-icon"></i> 개인정보 수집 및 활용동의(필수)</label> <b>[보기]</b></p>
-                    <p><label class="checkbox-wrap"><input type="checkbox" name="agree2" id="agree2" checked><i class="check-icon"></i> 개인정보 제3자 제공동의(필수)</label> <b>[보기]</b></p>
-                    <p><label class="checkbox-wrap"><input type="checkbox" name="agree3" checked><i class="check-icon"></i> 광고성 문자메세지 수신동의</label></p>
+                    <p><label class="checkbox-wrap"><input type="checkbox" id="agree1" checked><i class="check-icon"></i> 개인정보 수집 및 활용동의(필수)</label> <b>[보기]</b></p>
+                    <p><label class="checkbox-wrap"><input type="checkbox" id="agree2" checked><i class="check-icon"></i> 개인정보 제3자 제공동의(필수)</label> <b>[보기]</b></p>
+                    <p><label class="checkbox-wrap"><input type="checkbox" checked><i class="check-icon"></i> 광고성 문자메세지 수신동의</label></p>
                 </div>
 
                 <div class="btn_box">
@@ -245,24 +206,6 @@ if (isset($_POST["Update_type"]) && $_POST["Update_type"] === "Update_now") {
 </div>
 
 <script>
-// 1. 팝업 제어 및 폼 전송 함수
-function layer_1_open(id) {
-    $('#' + id).show();
-}
-
-function openPopup(id) {
-    $('#layer_1').hide();
-    $('#' + id).show();
-}
-
-function closePopup() {
-    $('#layer_1, #layer_2').hide();
-}
-
-function down_loading(step) {
-    alert("다운로드를 준비 중입니다.");
-}
-
 function submitForm() {
     var name = $.trim($('#user_name').val());
     var tel = $.trim($('#user_tel').val());
@@ -282,10 +225,11 @@ function submitForm() {
         return false;
     }
 
-    $('#apply_form').submit();
+    // GitHub Pages 정적 환경: 안내 후 성공 페이지 이동
+    alert("신청이 완료되었습니다.");
+    location.href = "success.html";
 }
 
-// 2. 슬라이더 및 이벤트 연결
 $(function(){
     $('#slider-div').slick({
         arrows: false,
@@ -314,7 +258,6 @@ $(document).ready(function() {
         $(this).find(".dimg > img").attr("src", "images/icon_down.png");
     });
 
-    // 선택자 오타 수정: $('file_list') -> $('.file_list')
     $('.file_list').click(function(){
         $(this).addClass("file_list_on");
         $(this).find(".dimg > img").attr("src", "images/icon_down_on.png");
