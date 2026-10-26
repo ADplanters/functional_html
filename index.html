@@ -12,12 +12,35 @@
 
 <script src="js/jquery-1.11.0.min.js"></script>
 <script src="js/jquery-ui.min.js"></script>
-<script src="js/jquery.bpopup.min.js"></script>
 <script type="text/javascript" src="js/slick.min.js"></script>
-<script src="js/default.js"></script>
+
+<style>
+/* 팝업 중앙 정렬 및 모달 배경 스타일 보정 */
+#modal_overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9990;
+}
+#layer_1, #layer_2 {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+}
+</style>
 </head>
 
 <body>
+<!-- 반투명 모달 배경 -->
+<div id="modal_overlay" onclick="closePopup();"></div>
+
 <!-- 비디오 BG -->
 <div class="parent-element-to-video">
     <video loop muted autoplay class="fullscreen-bg__video">
@@ -100,7 +123,7 @@
     </div>
     <!-- //800px 컨텐츠 박스 -->
 
-    <!-- layer1 -->
+    <!-- layer1 (다운로드 진행 레이어) -->
     <div class="layer_box" id="layer_1" style="display:none;">
         <input type="hidden" value="0" id="down_chk">
         <div><img src="images/download_top.jpg" class="down_top" onclick="down_loading(1);"></div>
@@ -152,7 +175,7 @@
     </div>
     <!-- //layer1 -->
 
-    <!-- layer2 -->
+    <!-- layer2 (신청 입력 레이어) -->
     <div class="layer_box2" id="layer_2" style="display:none;">
         <div class="content_box">       
             <div class="top_container">
@@ -206,9 +229,78 @@
 </div>
 
 <script>
+// ==========================================
+// 1. 팝업 및 다운로드 시뮬레이션 제어 함수
+// ==========================================
+var downloadTimer = null;
+
+function openPopup(div_id) {
+    $('#modal_overlay').fadeIn(200);
+
+    if (div_id === 'layer_1') {
+        $('#layer_2').hide();
+        downimg_change(1);
+        $('#layer_1').fadeIn(200);
+    } else if (div_id === 'layer_2') {
+        $('#layer_1').hide();
+        $('#layer_2').fadeIn(200);
+    }
+}
+
+function closePopup() {
+    $('#layer_1, #layer_2, #modal_overlay').fadeOut(200);
+    $('#down_chk').val('0');
+    clearTimeout(downloadTimer);
+}
+
+function layer_1_open(div_id) {
+    openPopup(div_id);
+    $('#down_chk').val('1');
+
+    clearTimeout(downloadTimer);
+    downloadTimer = setTimeout(function() {
+        down_loading(1);
+    }, 500);
+}
+
+function downimg_change(num) {
+    if (num < 1 || num > 8) return;
+
+    var file_speed  = ["", "11.2MB", "11.5MB", "12.2MB", "12.6MB", "12.6MB", "13.1MB", "13.0MB", "13.8MB"];
+    var file_cnt    = ["", "0/2", "1/2", "1/2", "1/2", "2/2", "2/2", "2/2", "2/2"];
+    var file01_down = ["", "1.3MB", "2.3MB", "4.1MB", "5.4MB", "6.2MB", "6.2MB", "6.2MB", "6.2MB"];
+    var file02_down = ["", "1.3MB", "1.8MB", "2.1MB", "2.9MB", "3.23MB", "4.3MB", "4.9MB", "5MB"];
+
+    $("#down_bar").attr("src", "images/down_bar_" + num + ".jpg");
+    $("#file_speed").html(file_speed[num]);
+    $("#file_cnt").html(file_cnt[num]);
+    $("#file01_down").html(file01_down[num]);
+    $("#file02_down").html(file02_down[num]);
+}
+
+function down_loading(counter) {
+    if (counter < 8) {
+        clearTimeout(downloadTimer);
+        downloadTimer = setTimeout(function() {
+            counter++;
+            downimg_change(counter);
+            down_loading(counter);
+        }, 300);
+    } else if (counter === 8) {
+        clearTimeout(downloadTimer);
+        downloadTimer = setTimeout(function() {
+            // 다운로드가 끝나면 layer_1이 닫히고 layer_2(DB입력창)로 전환
+            openPopup('layer_2');
+        }, 1000);
+    }
+}
+
+// ==========================================
+// 2. 폼 검증 및 페이지 이동
+// ==========================================
 function submitForm() {
     var name = $.trim($('#user_name').val());
-    var tel = $.trim($('#user_tel').val());
+    var tel  = $.trim($('#user_tel').val());
 
     if (!name) {
         alert("이름을 입력해주세요.");
@@ -225,11 +317,13 @@ function submitForm() {
         return false;
     }
 
-    // GitHub Pages 정적 환경: 안내 후 성공 페이지 이동
     alert("신청이 완료되었습니다.");
     location.href = "success.html";
 }
 
+// ==========================================
+// 3. 슬라이더 및 이벤트 연결
+// ==========================================
 $(function(){
     $('#slider-div').slick({
         arrows: false,
